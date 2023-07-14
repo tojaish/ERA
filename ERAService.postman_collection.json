@@ -1,0 +1,139 @@
+{
+	"info": {
+		"_postman_id": "b756ee01-9e75-40a2-8296-19271164c31b",
+		"name": "ERAService",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17802"
+	},
+	"item": [
+		{
+			"name": "SearchRSAProviders",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"glat\": \"34.0\",\n    \"glong\": \"35.0\",\n    \"radius\": \"10\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/eras/providers/search",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"eras",
+						"providers",
+						"search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "updateAssistantsLocation",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"glat\": \"34.0\",\n    \"glong\": \"35.0\",\n    \"name\": \"provider1\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/eras/providers/update",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"eras",
+						"providers",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ReserveAssistant",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"glat\": \"34.0\",\n    \"glong\": \"31.0\",\n    \"name\": \"Jai-01\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/eras/providers/reserve",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"eras",
+						"providers",
+						"reserve"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ReleaseAssitant",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"assistantName\": \"provider1\",\n    \"customerName\": \"Jai-01\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/eras/providers/release",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"eras",
+						"providers",
+						"release"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
