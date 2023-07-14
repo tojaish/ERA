@@ -7,6 +7,6 @@ public record SearchCriteria(
     Double glat,
     @NotEmpty(message="Longitude cannot be empty")    
     Double glong,
-    @NotEmpty(message="Search Radius cannot be empty")    
-    int radius
+    @NotEmpty(message="Number of results cannot be empty")    
+    int limit
 ) {}

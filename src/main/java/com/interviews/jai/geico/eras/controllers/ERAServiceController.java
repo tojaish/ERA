@@ -34,10 +34,10 @@ public class ERAServiceController {
 	public ResponseEntity<SortedSet<Assistant>> getNearbyEmergencyServiceProviders(
 			@RequestBody SearchCriteria criterion) {
 		try {
-			log.info(criterion.toString());
+			log.info("Search Criterion :: " + criterion.toString());
 			return new ResponseEntity<SortedSet<Assistant>>(
 					service.findNearestAssistants(new Geolocation(criterion.glat(), criterion.glong()),
-							criterion.radius()),
+							criterion.limit()),
 					HttpStatus.OK);
 		} catch (Exception e) {
 			log.error("Exception occured in Updating the Assistant.", e);
@@ -49,6 +49,7 @@ public class ERAServiceController {
 	@PostMapping("/update")
 	public ResponseEntity<String> updateEmergencyProvidersLocation(@RequestBody UserDetails userInfo) {
 		try {
+			log.info("Update Assistant :: " + userInfo.toString());
 			Geolocation geoLocation = new Geolocation(userInfo.glat(), userInfo.glong());
 			service.updateAssistantLocation(new Assistant(userInfo.name(), geoLocation, null), geoLocation);
 			return new ResponseEntity<>("Successfully updated Providers location.", HttpStatus.OK);
@@ -61,6 +62,7 @@ public class ERAServiceController {
 	@PostMapping("/reserve")
 	public ResponseEntity<String> reserveProvider(@RequestBody UserDetails userInfo) {
 		try {
+			log.info("Reserve Assistant :: " + userInfo.toString());
 			Geolocation geoLocation = new Geolocation(userInfo.glat(), userInfo.glong());
 			return new ResponseEntity<>(String.format("Emergency Assistance Provdier %s, will be assisting you.",
 					service.reserveAssistant(new Customer(userInfo.name(), geoLocation), geoLocation)
@@ -75,6 +77,7 @@ public class ERAServiceController {
 	@PostMapping("/release")
 	public ResponseEntity<String> releaseProvider(@RequestBody ReleaseProvider releaseProvider) {
 		try {
+			log.info("Release Provider :: " + releaseProvider.toString());
 			service.releaseAssistant(new Customer(releaseProvider.customerName(), null),
 					new Assistant(releaseProvider.assistantName(), null, null));
 			return new ResponseEntity<String>(String.format("Emergency Assistant :: %s, is successfully released.",

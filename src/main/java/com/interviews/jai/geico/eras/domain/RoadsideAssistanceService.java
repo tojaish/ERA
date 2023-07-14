@@ -1,11 +1,20 @@
 package com.interviews.jai.geico.eras.domain;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Metric;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands.GeoLocation;
 import org.springframework.data.redis.connection.RedisGeoCommands.GeoSearchCommandArgs;
@@ -21,9 +30,12 @@ public class RoadsideAssistanceService {
 
     // The Key in Redis which will be used to updated geo locations.
     public static final String ASSISTNATS_KEY = "providers_loc_idx";
-    
+
     // Assuming here to a fixed value but this could be a paramater in the api call.
-    public static final Distance radius_limit = new Distance(100.0d);
+    public static final Distance radius_limit = new Distance(100000.0d, Metrics.KILOMETERS);
+
+    // Cache to be swapped out with Redis or Permanent Storage.
+    private final Map<String, String> reservations = new HashMap<>();
 
     @Autowired
     private final GeoOperations<String, String> geoOperations;
@@ -40,7 +52,7 @@ public class RoadsideAssistanceService {
      * @param assistantLocation represents the location of the roadside assistant
      */
     public void updateAssistantLocation(Assistant assistant, Geolocation assistantLocation) {
-        Point point = new Point(assistantLocation.glong(), assistantLocation.glat());
+        Point point = new Point(assistantLocation.glat(), assistantLocation.glong());
         geoOperations.add(ASSISTNATS_KEY, point, assistant.name());
     }
 
@@ -58,16 +70,27 @@ public class RoadsideAssistanceService {
         GeoSearchCommandArgs searchOptions = GeoSearchCommandArgs.newGeoSearchArgs();
         searchOptions.includeCoordinates();
         searchOptions.includeDistance();
-        if(limit > 0) {
-            searchOptions.limit(limit);
-        }
+        searchOptions.limit(limit > 0 ? limit : 5);
         searchOptions.sortAscending();
 
-        GeoResults<GeoLocation<String>> results = geoOperations.search(ASSISTNATS_KEY, 
-                                                                        GeoReference.fromCoordinate(point), 
-                                                                        radius_limit, searchOptions);
-        log.info(Optional.ofNullable(results).toString());
-        return null;
+        GeoResults<GeoLocation<String>> matchedAssistants = geoOperations.search(ASSISTNATS_KEY,
+                GeoReference.fromCoordinate(point),
+                radius_limit, searchOptions);
+
+        Supplier<TreeSet<Assistant>> assistantSorter = () -> new TreeSet<Assistant>(
+                Comparator.comparingDouble(Assistant::distance));
+
+        // Filter out Assistants who are reserved and Map results.
+        SortedSet<Assistant> availableAssistants = Optional.ofNullable(matchedAssistants)
+                .get().getContent().stream()
+                .filter(s -> !reservations.containsValue(s.getContent().getName()))
+                .map(s -> new Assistant(s.getContent().getName(),
+                        new Geolocation(s.getContent().getPoint().getX(), s.getContent().getPoint().getY()),
+                        s.getDistance().getValue()))
+                .collect(Collectors.toCollection(assistantSorter));
+
+        log.debug("Available Assistants :: " + availableAssistants);
+        return availableAssistants;
     }
 
     /**
@@ -79,7 +102,15 @@ public class RoadsideAssistanceService {
      * @return The Assistant that is on their way to help
      */
     public Optional<Assistant> reserveAssistant(Customer customer, Geolocation customerLocation) {
-        return Optional.empty();
+        SortedSet<Assistant> availableAssitants = this.findNearestAssistants(customerLocation, 5);
+        Optional<Assistant> selectedAssistant = Optional.ofNullable(availableAssitants.first());
+        // Assuming, we do not allow for re-booking a different Assitant
+        if(selectedAssistant.isPresent() && !reservations.containsKey(customer.name())){
+            reservations.put(customer.name(), selectedAssistant.get().name());
+            return selectedAssistant;
+        }else{
+            return Optional.empty();
+        }
     }
 
     /**
@@ -90,7 +121,10 @@ public class RoadsideAssistanceService {
      * @param assistant - An assistant that was previously reserved by the customer
      */
     public void releaseAssistant(Customer customer, Assistant assistant) {
-
+        if(reservations.containsKey(customer.name())) {
+            if(reservations.get(customer.name()).equalsIgnoreCase(assistant.name()))
+                reservations.remove(customer.name());
+        }
     }
 
 }
