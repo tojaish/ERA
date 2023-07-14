@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  era-service:
+    build: .
+    ports:
+     - "8080:10080"
+    links:
+      - era-cache
+    networks:
+      - eras-network
+  era-cache:
+    image: 'redis:latest'
+    restart: always
+    ports:
+      - '6379:10079'
+    command: redis-server --save 10 1 --loglevel warning
+    volumes: 
+      - cache:/data
+    networks:
+      - eras-network
+volumes:
+  cache:
+    driver: local
+networks:
+    eras-network:
+        driver: bridge

@@ -1,0 +1,9 @@
+spring:
+    config:
+        activate:
+            on-profile: default
+    cache:
+        type: redis
+        redis:
+            host: localhost
+            port: 6379
